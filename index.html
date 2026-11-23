@@ -5,48 +5,165 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HM Shop 777 POS</title>
 <style>
-body{font-family:Arial,sans-serif;background:#f2f5fa;margin:0;color:#18243a}
-header{background:#173b70;color:white;padding:20px}
-main{padding:16px;max-width:700px;margin:auto}
-.card{background:white;padding:16px;border-radius:12px;margin:12px 0}
-input,button{padding:12px;margin:5px 0;border-radius:8px;border:1px solid #ccc;width:100%;box-sizing:border-box}
-button{background:#1766bd;color:white;border:0;font-weight:bold}
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f2f5fa;margin:0;color:#182432}
+header{background:#173670;color:white;padding:18px;text-align:center}
+main{padding:14px;max-width:700px;margin:auto}
+.card{background:white;padding:16px;border-radius:12px;margin:12px 0;box-shadow:0 2px 8px #0001}
+input,select,button{padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ccc;width:100%;font-size:16px}
+button{background:#1766bd;color:white;border:0;font-weight:bold;cursor:pointer}
+.delete{background:#b42318;width:auto;padding:7px 12px}
+h3{margin-top:5px}
+small{color:#667085}
+.record{border-bottom:1px solid #eee;padding:10px 0}
+.total{font-size:25px;font-weight:bold;color:#1766bd}
 </style>
 </head>
 <body>
-<header><h2>HM Shop 777</h2><p>အရောင်းစနစ် | Sales System</p></header>
+<header>
+<h2>HM Shop 777</h2>
+<p>အရောင်းစနစ် | Sales System</p>
+</header>
 <main>
 <div class="card">
-<h3>အရောင်းအသစ် | New Sale</h3>
-<input id="product" placeholder="ကုန်ပစ္စည်း / Product">
-<input id="price" type="number" placeholder="ဈေးနှုန်း / Price">
-<input id="qty" type="number" placeholder="အရေအတွက် / Quantity" value="1">
-<button onclick="addSale()">အရောင်းသွင်းမယ် / Add Sale</button>
+<h3>⚙️ Shop Settings | ဆိုင်ဆက်တင်</h3>
+<label>Country | နိုင်ငံ</label>
+<select id="country" onchange="changeCountry()">
+<option value="MY">Malaysia - MYR (RM)</option>
+<option value="MM">Myanmar - MMK (K)</option>
+<option value="SG">Singapore - SGD ($)</option>
+<option value="TH">Thailand - THB (฿)</option>
+<option value="US">USA - USD ($)</option>
+<option value="GB">United Kingdom - GBP (£)</option>
+<option value="ID">Indonesia - IDR (Rp)</option>
+<option value="JP">Japan - JPY (¥)</option>
+</select>
+<label>Language | ဘာသာစကား</label>
+<select id="language" onchange="changeLanguage()">
+<option value="my">မြန်မာ</option>
+<option value="en">English</option>
+</select>
 </div>
+
 <div class="card">
-<h3>ယနေ့အရောင်း | Today's Sales</h3>
-<h2 id="total">0 MMK</h2>
+<h3 id="saleTitle">အရောင်းအသစ် | New Sale</h3>
+<input id="product" placeholder="ကုန်ပစ္စည်းအမည် | Product name">
+<input id="price" type="number" min="0" step="any" placeholder="ဈေးနှုန်း | Price">
+<input id="qty" type="number" min="1" step="1" value="1" placeholder="အရေအတွက် | Quantity">
+<button onclick="addSale()" id="addButton">အရောင်းထည့်မည် | Add Sale</button>
+</div>
+
+<div class="card">
+<h3 id="todayTitle">ယနေ့အရောင်း | Today's Sales</h3>
+<div id="total" class="total"></div>
 <div id="records"></div>
 </div>
 </main>
+
 <script>
+const countries={
+MY:{currency:"MYR",symbol:"RM",locale:"ms-MY"},
+MM:{currency:"MMK",symbol:"K",locale:"my-MM"},
+SG:{currency:"SGD",symbol:"$",locale:"en-SG"},
+TH:{currency:"THB",symbol:"฿",locale:"th-TH"},
+US:{currency:"USD",symbol:"$",locale:"en-US"},
+GB:{currency:"GBP",symbol:"£",locale:"en-GB"},
+ID:{currency:"IDR",symbol:"Rp",locale:"id-ID"},
+JP:{currency:"JPY",symbol:"¥",locale:"ja-JP"}
+};
+
+let country=localStorage.getItem("hm_country")||"MY";
+let language=localStorage.getItem("hm_language")||"my";
 let sales=JSON.parse(localStorage.getItem("hm_sales")||"[]");
-function render(){
-document.getElementById("total").textContent=sales.reduce((s,x)=>s+x.price*x.qty,0).toLocaleString()+" MMK";
-document.getElementById("records").innerHTML=sales.map(x=>"<p>"+x.name+" x "+x.qty+" = "+(x.price*x.qty).toLocaleString()+" MMK</p>").join("");
+
+function money(amount,code){
+let c=Object.values(countries).find(x=>x.currency===code)||countries.MY;
+return c.symbol+" "+Number(amount).toLocaleString(c.locale,{maximumFractionDigits:2});
 }
+
+function changeCountry(){
+country=document.getElementById("country").value;
+localStorage.setItem("hm_country",country);
+render();
+}
+
+function changeLanguage(){
+language=document.getElementById("language").value;
+localStorage.setItem("hm_language",language);
+render();
+}
+
 function addSale(){
 let name=document.getElementById("product").value.trim();
 let price=Number(document.getElementById("price").value);
 let qty=Number(document.getElementById("qty").value);
-if(!name||price<=0||qty<=0){alert("အချက်အလက်ပြည့်စုံစွာထည့်ပါ");return}
-sales.push({name,price,qty});
+
+if(!name||!Number.isFinite(price)||price<=0||!Number.isInteger(qty)||qty<=0){
+alert(language==="my"?"အချက်အလက်များ မှန်ကန်စွာ ဖြည့်ပါ":"Please enter valid product, price and quantity.");
+return;
+}
+
+sales.push({
+name:name,
+price:price,
+qty:qty,
+currency:countries[country].currency,
+country:country,
+date:new Date().toISOString()
+});
+
 localStorage.setItem("hm_sales",JSON.stringify(sales));
-render();
 document.getElementById("product").value="";
 document.getElementById("price").value="";
 document.getElementById("qty").value=1;
+render();
 }
+
+function deleteSale(index){
+if(!confirm(language==="my"?"ဒီအရောင်းမှတ်တမ်းကို ဖျက်မှာ သေချာပါသလား။":"Delete this sale?"))return;
+sales.splice(index,1);
+localStorage.setItem("hm_sales",JSON.stringify(sales));
+render();
+}
+
+function render(){
+document.getElementById("country").value=country;
+document.getElementById("language").value=language;
+
+document.getElementById("saleTitle").textContent=language==="my"?"အရောင်းအသစ် | New Sale":"New Sale | အရောင်းအသစ်";
+document.getElementById("todayTitle").textContent=language==="my"?"ယနေ့အရောင်း | Today's Sales":"Today's Sales | ယနေ့အရောင်း";
+document.getElementById("addButton").textContent=language==="my"?"အရောင်းထည့်မည် | Add Sale":"Add Sale | အရောင်းထည့်မည်";
+
+let today=new Date().toLocaleDateString();
+let todays=sales.map((s,i)=>({...s,index:i})).filter(s=>new Date(s.date).toLocaleDateString()===today);
+
+let totals={};
+todays.forEach(s=>{
+let code=s.currency||"MMK";
+totals[code]=(totals[code]||0)+s.price*s.qty;
+});
+
+document.getElementById("total").innerHTML=
+Object.keys(totals).length?
+Object.entries(totals).map(([code,total])=>"<div>"+money(total,code)+"</div>").join("")
+:"0";
+
+document.getElementById("records").innerHTML=todays.length?
+todays.slice().reverse().map(s=>
+'<div class="record"><b>'+escapeHTML(s.name)+'</b><br>'+
+s.qty+' x '+money(s.price,s.currency||"MMK")+
+'<br><b>'+money(s.price*s.qty,s.currency||"MMK")+'</b> '+
+'<button class="delete" onclick="deleteSale('+s.index+')">Delete / ဖျက်ရန်</button></div>'
+).join("")
+:"<p>အရောင်းမှတ်တမ်း မရှိသေးပါ | No sales yet</p>";
+}
+
+function escapeHTML(text){
+return String(text).replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+})[c]);
+}
+
 render();
 </script>
 </body>
