@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HM Shop 777 POS</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f2f5fa;margin:0;color:#18243a}
+header{background:#173b70;color:white;padding:20px}
+main{padding:16px;max-width:700px;margin:auto}
+.card{background:white;padding:16px;border-radius:12px;margin:12px 0}
+input,button{padding:12px;margin:5px 0;border-radius:8px;border:1px solid #ccc;width:100%;box-sizing:border-box}
+button{background:#1766bd;color:white;border:0;font-weight:bold}
+</style>
+</head>
+<body>
+<header><h2>HM Shop 777</h2><p>အရောင်းစနစ် | Sales System</p></header>
+<main>
+<div class="card">
+<h3>အရောင်းအသစ် | New Sale</h3>
+<input id="product" placeholder="ကုန်ပစ္စည်း / Product">
+<input id="price" type="number" placeholder="ဈေးနှုန်း / Price">
+<input id="qty" type="number" placeholder="အရေအတွက် / Quantity" value="1">
+<button onclick="addSale()">အရောင်းသွင်းမယ် / Add Sale</button>
+</div>
+<div class="card">
+<h3>ယနေ့အရောင်း | Today's Sales</h3>
+<h2 id="total">0 MMK</h2>
+<div id="records"></div>
+</div>
+</main>
+<script>
+let sales=JSON.parse(localStorage.getItem("hm_sales")||"[]");
+function render(){
+document.getElementById("total").textContent=sales.reduce((s,x)=>s+x.price*x.qty,0).toLocaleString()+" MMK";
+document.getElementById("records").innerHTML=sales.map(x=>"<p>"+x.name+" x "+x.qty+" = "+(x.price*x.qty).toLocaleString()+" MMK</p>").join("");
+}
+function addSale(){
+let name=document.getElementById("product").value.trim();
+let price=Number(document.getElementById("price").value);
+let qty=Number(document.getElementById("qty").value);
+if(!name||price<=0||qty<=0){alert("အချက်အလက်ပြည့်စုံစွာထည့်ပါ");return}
+sales.push({name,price,qty});
+localStorage.setItem("hm_sales",JSON.stringify(sales));
+render();
+document.getElementById("product").value="";
+document.getElementById("price").value="";
+document.getElementById("qty").value=1;
+}
+render();
+</script>
+</body>
+</html>
+
