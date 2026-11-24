@@ -1,4 +1,5 @@
-<!doctype html>
+
+  <!doctype html>
 <html lang="my">
 <head>
 <meta charset="utf-8">
@@ -68,7 +69,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
 <div class="row"><div><label>Barcode</label><input id="pBarcode"></div><div><label>Category / အမျိုးအစား</label><input id="pCategory"></div></div>
 <div class="row"><div><label>Cost Price / ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="0.01" value="0"></div><div><label>Selling Price / ရောင်းဈေး</label><input id="pPrice" type="number" min="0" step="0.01" value="0"></div></div>
 <div class="row"><div><label>Opening Stock / လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0" step="0.01" value="0"></div><div><label>Low Stock Alert / သတိပေးအရေအတွက်</label><input id="pLow" type="number" min="0" step="0.01" value="5"></div></div>
-<label>Product Photo / ပစ္စည်းဓာတ်ပုံ (Camera or Gallery)</label><input id="pImage" type="file" accept="image/*" 
+<label>Product Photo / ပစ္စည်းဓာတ်ပုံ (Camera or Gallery)</label>
+<input id="pImage" type="file" accept="image/*">
+<p class="muted">Camera ဖြင့် ဓာတ်ပုံရိုက်ရန် သို့မဟုတ် ဖုန်းထဲမှ Gallery / Files မှ ရွေးချယ်ရန်။</p>
 <img id="imagePreview" class="preview hidden" alt="Product preview">
 <button id="addProductBtn">Save Product / သိမ်းမည်</button>
 <hr style="border:0;border-top:1px solid #e5eaf1;margin:18px 0">
