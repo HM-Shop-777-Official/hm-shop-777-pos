@@ -9,531 +9,388 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#182432}
-header{background:#173670;color:white;padding:16px;text-align:center}
-header h2{margin:0}
-main{max-width:1050px;margin:auto;padding:14px}
-.card{background:white;padding:17px;border-radius:12px;margin:12px 0;box-shadow:0 2px 8px #0001}
-input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ccd3df;border-radius:8px;font-size:15px}
+header{background:#173670;color:white;padding:18px;text-align:center}
+main{max-width:1100px;margin:auto;padding:12px}
+.card{background:white;padding:16px;border-radius:12px;margin:12px 0;box-shadow:0 2px 8px #0000000d}
+input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ccd3df;border-radius:7px;font-size:15px}
 button{background:#1766bd;color:white;border:0;font-weight:bold;cursor:pointer}
 button.secondary{background:#475467}
 button.danger{background:#b42318}
-button:disabled{opacity:.5}
-nav{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
-nav button{width:auto;flex:1;min-width:100px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{flex:1;min-width:90px}
 .hidden{display:none!important}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-.stat{background:#edf4ff;padding:16px;border-radius:10px}
-.stat strong{display:block;font-size:23px;color:#1766bd;margin-top:7px}
-.record{border-bottom:1px solid #eee;padding:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:#edf4ff;padding:15px;border-radius:9px}
+.stat strong{display:block;font-size:22px;color:#1766bd;margin-top:8px}
+.status{padding:12px;border-radius:8px;background:#edf4ff;margin:10px 0;overflow-wrap:anywhere}
+.good{background:#dcfae6;color:#05603a}
+.bad{background:#fee4e2;color:#912018}
+.record{padding:12px 0;border-bottom:1px solid #eee}
 .total{font-size:25px;font-weight:bold;color:#1766bd}
 small,.muted{color:#667085}
+.table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:500px}
 th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
-.table-wrap{overflow-x:auto}
-.status{padding:10px;border-radius:8px;background:#edf4ff;margin:10px 0;white-space:pre-wrap}
-.bad{background:#fee4e2;color:#912018}
-.good{background:#dcfae6;color:#05603a}
 h3{margin-top:4px}
-@media(max-width:500px){main{padding:8px}.card{padding:13px}nav button{font-size:12px}}
+@media(max-width:500px){main{padding:7px}.card{padding:12px}nav button{font-size:12px}}
 </style>
 </head>
 <body>
-
 <header>
 <h2>HM Shop 777</h2>
-<p>POS & Business Management System</p>
+<p>Offline & Online POS Business System</p>
 </header>
-
 <main>
 <div class="card">
-<label>Language | ဘာသာစကား</label>
-<select id="language" onchange="changeLanguage()">
+<label>Language / ဘာသာစကား</label>
+<select id="language" onchange="setLanguage()">
 <option value="my">မြန်မာ</option>
 <option value="en">English</option>
 </select>
-<div id="connection" class="status">Supabase connection is starting...</div>
+<div id="status" class="status">Supabase is starting...</div>
 </div>
 
-<!-- AUTH -->
-<section id="authSection" class="card">
-<h3>Login | အကောင့်ဝင်ရန်</h3>
-<input id="email" type="email" placeholder="Email">
+<section id="auth" class="card">
+<h3>Login / အကောင့်ဝင်ရန်</h3>
+<input id="email" type="email" placeholder="Email address">
 <input id="password" type="password" placeholder="Password">
-<input id="fullName" placeholder="Full name | အမည် (Sign up only)">
-<input id="phone" placeholder="Phone | ဖုန်းနံပါတ် (Optional)">
-<button onclick="login()">Login | ဝင်မည်</button>
-<button class="secondary" onclick="signup()">Create Account | အကောင့်ဖွင့်မည်</button>
-<p class="muted">Account အသစ်ဖွင့်ပြီးပါက Email confirmation လိုအပ်နိုင်ပါသည်။</p>
+<button onclick="login()">Login / ဝင်မည်</button>
+<hr>
+<h3>Create Staff Account / အကောင့်အသစ်</h3>
+<input id="newName" placeholder="Full name / အမည်">
+<input id="newEmail" type="email" placeholder="Email">
+<input id="newPassword" type="password" placeholder="Password (8 characters minimum)">
+<button class="secondary" onclick="signup()">Create Account / အကောင့်ဖွင့်မည်</button>
+<p class="muted">Customer phone-only login will be added after secure backend setup.</p>
 </section>
 
-<!-- APP -->
-<section id="appSection" class="hidden">
+<section id="app" class="hidden">
 <div class="card">
 <div id="userInfo"></div>
-<button class="danger" onclick="logout()">Logout | ထွက်ရန်</button>
+<label>Select Shop / ဆိုင်ရွေးရန်</label>
+<select id="shopSelect" onchange="selectShop()"></select>
+<button class="danger" onclick="logout()">Logout / ထွက်ရန်</button>
 </div>
-
 <nav>
-<button onclick="showPage('home')">Home</button>
-<button onclick="showPage('pos')">POS</button>
-<button onclick="showPage('sales')">Sales</button>
-<button id="adminTab" class="hidden" onclick="showPage('admin')">Super Admin</button>
+<button onclick="page('home')">Home</button>
+<button onclick="page('pos')">POS</button>
+<button onclick="page('products')">Products</button>
+<button onclick="page('reports')">Reports</button>
+<button onclick="page('admin')">Admin</button>
 </nav>
 
-<!-- HOME -->
-<section id="page-home" class="page">
+<section id="home" class="page">
 <div class="card">
-<h3>HM Shop 777 Dashboard</h3>
-<p>Welcome to HM Shop 777 POS System.</p>
+<h3>Dashboard / ပင်မစာမျက်နှာ</h3>
 <div class="grid">
-<div class="stat">Today's Sales<strong id="homeTotal">0</strong></div>
-<div class="stat">Today's Transactions<strong id="homeCount">0</strong></div>
-<div class="stat">Account<strong id="accountRole">User</strong></div>
+<div class="stat">Today's Sales<strong id="todayTotal">0</strong></div>
+<div class="stat">Transactions<strong id="todayCount">0</strong></div>
+<div class="stat">Products<strong id="productCount">0</strong></div>
+<div class="stat">Account Role<strong id="role">User</strong></div>
 </div>
 </div>
 </section>
 
-<!-- POS -->
-<section id="page-pos" class="page hidden">
+<section id="pos" class="page hidden">
 <div class="card">
-<h3>Shop Settings | ဆိုင်ဆက်တင်</h3>
-<label>Country | နိုင်ငံ</label>
-<select id="country" onchange="changeCountry()">
-<option value="MY">Malaysia - MYR (RM)</option>
-<option value="MM">Myanmar - MMK (K)</option>
-<option value="SG">Singapore - SGD ($)</option>
-<option value="TH">Thailand - THB (฿)</option>
-<option value="US">USA - USD ($)</option>
-<option value="GB">United Kingdom - GBP (£)</option>
-<option value="ID">Indonesia - IDR (Rp)</option>
-<option value="JP">Japan - JPY (¥)</option>
+<h3>New Sale / အရောင်းအသစ်</h3>
+<label>Product / ကုန်ပစ္စည်း</label>
+<select id="saleProduct" onchange="showProductPrice()"></select>
+<div id="salePrice" class="muted"></div>
+<input id="saleQty" type="number" min="1" step="1" value="1" placeholder="Quantity">
+<label>Payment Method</label>
+<select id="payment">
+<option value="cash">Cash</option>
+<option value="qr">QR</option>
+<option value="bank">Bank Transfer</option>
 </select>
-</div>
-
-<div class="card">
-<h3>New Sale | အရောင်းအသစ်</h3>
-<input id="product" placeholder="Product name | ကုန်ပစ္စည်းအမည်">
-<input id="price" type="number" min="0" step="any" placeholder="Price | ဈေးနှုန်း">
-<input id="qty" type="number" min="1" step="1" value="1" placeholder="Quantity | အရေအတွက်">
-<button onclick="addSale()">Add Sale | အရောင်းထည့်မည်</button>
-</div>
-
-<div class="card">
-<h3>Today's Sales | ယနေ့အရောင်း</h3>
-<div id="total" class="total">0</div>
-<div id="records"></div>
+<button onclick="addSale()">Complete Sale / အရောင်းသိမ်းမည်</button>
+<div id="saleMessage"></div>
 </div>
 </section>
 
-<!-- SALES -->
-<section id="page-sales" class="page hidden">
+<section id="products" class="page hidden">
 <div class="card">
-<h3>Sales Reports | အရောင်းအစီရင်ခံစာ</h3>
-<p class="muted">ဤစာမျက်နှာတွင် လက်ရှိဖုန်း Browser ထဲရှိ အရောင်းမှတ်တမ်းများကိုသာ ပြသထားပါသည်။</p>
-<div id="salesReport"></div>
+<h3>Add Product / ပစ္စည်းအသစ်ထည့်ရန်</h3>
+<input id="pName" placeholder="Product name / ပစ္စည်းအမည်">
+<input id="pBarcode" placeholder="Barcode (optional)">
+<input id="pCategory" placeholder="Category / အမျိုးအစား">
+<input id="pCost" type="number" min="0" step="any" placeholder="Cost price / ဝယ်ဈေး">
+<input id="pPrice" type="number" min="0" step="any" placeholder="Selling price / ရောင်းဈေး">
+<input id="pStock" type="number" min="0" step="any" placeholder="Opening stock / လက်ကျန်အရေအတွက်">
+<input id="pLow" type="number" min="0" step="any" value="5" placeholder="Low stock alert level">
+<button onclick="addProduct()">Save Product / သိမ်းမည်</button>
 </div>
-</section>
-
-<!-- ADMIN -->
-<section id="page-admin" class="page hidden">
 <div class="card">
-<h3>Super Admin Dashboard</h3>
-<p id="adminWelcome">Platform Administration</p>
-<div class="grid">
-<div class="stat">Registered Profiles<strong id="userCount">0</strong></div>
-<div class="stat">Shops<strong id="shopCount">0</strong></div>
-<div class="stat">Shop Memberships<strong id="memberCount">0</strong></div>
-</div>
-</div>
-
-<div class="card">
-<h3>1. User Management</h3>
-<button onclick="loadUsers()">Refresh Users</button>
+<h3>Product Inventory / ကုန်ပစ္စည်းစာရင်း</h3>
+<button class="secondary" onclick="loadProducts()">Refresh Products</button>
 <div class="table-wrap">
-<table><thead><tr><th>Name</th><th>Phone</th><th>User ID</th></tr></thead>
-<tbody id="usersTable"></tbody></table>
+<table>
+<thead><tr><th>Product</th><th>Cost</th><th>Price</th><th>Stock</th></tr></thead>
+<tbody id="productsTable"></tbody>
+</table>
 </div>
 </div>
+</section>
 
+<section id="reports" class="page hidden">
 <div class="card">
-<h3>2. Shop Management</h3>
-<input id="shopName" placeholder="Shop name | ဆိုင်အမည်">
-<select id="shopCountry">
-<option value="MY">Malaysia</option>
-<option value="MM">Myanmar</option>
-<option value="SG">Singapore</option>
-<option value="TH">Thailand</option>
-<option value="US">USA</option>
-<option value="GB">United Kingdom</option>
-<option value="ID">Indonesia</option>
-<option value="JP">Japan</option>
-</select>
-<button onclick="createShop()">Create Shop | ဆိုင်အသစ်ဖွင့်ရန်</button>
-<div id="shopsList"></div>
-</div>
-
-<div class="card">
-<h3>3. Global Sales Reports</h3>
-<p>အခြားဆိုင်များ၏ အရောင်းကို စုပေါင်းကြည့်ရန် Sales Database နှင့် Shop ID ချိတ်ဆက်မှု လိုအပ်ပါသည်။</p>
-<p id="globalSalesInfo">Sales database is not configured yet.</p>
-</div>
-
-<div class="card">
-<h3>4. Free / Paid Membership</h3>
+<h3>Sales Reports / အရောင်းစာရင်း</h3>
+<button class="secondary" onclick="loadReports()">Refresh Reports</button>
 <div class="grid">
-<div class="stat">
-<h3>FREE</h3>
-<p>Basic POS access</p>
-<p>Basic sales records</p>
+<div class="stat">Total Sales<strong id="reportTotal">0</strong></div>
+<div class="stat">Transactions<strong id="reportCount">0</strong></div>
 </div>
-<div class="stat">
-<h3>PAID</h3>
-<p>Advanced reports</p>
-<p>Multiple shop management</p>
+<div id="salesList"></div>
 </div>
-</div>
-<p class="muted">Membership payment နှင့် subscription database မချိတ်ဆက်ရသေးပါ။</p>
-</div>
+</section>
 
+<section id="admin" class="page hidden">
 <div class="card">
-<h3>5. System Settings</h3>
-<label>Default Language</label>
-<select id="adminLanguage" onchange="setAdminLanguage()">
-<option value="my">မြန်မာ</option>
-<option value="en">English</option>
-</select>
-<label>Default Country</label>
-<select id="adminCountry" onchange="setAdminCountry()">
-<option value="MY">Malaysia</option>
-<option value="MM">Myanmar</option>
-<option value="SG">Singapore</option>
-<option value="TH">Thailand</option>
-<option value="US">USA</option>
-<option value="GB">United Kingdom</option>
-<option value="ID">Indonesia</option>
-<option value="JP">Japan</option>
-</select>
-<button onclick="refreshAdmin()">Refresh Admin Data</button>
-</div>
-
-<div class="card">
-<h3>Shop Membership Records</h3>
-<div class="table-wrap">
-<table><thead><tr><th>Shop ID</th><th>User ID</th><th>Role</th><th>Status</th></tr></thead>
-<tbody id="membersTable"></tbody></table>
-</div>
+<h3>Shop Information / ဆိုင်အချက်အလက်</h3>
+<div id="shopInfo"></div>
+<p class="muted">Super Admin, Owner, Manager and Cashier permissions are controlled by Supabase.</p>
 </div>
 </section>
 </section>
 </main>
 
 <script>
-// Supabase public client configuration
-const SUPABASE_URL = "https://clihgidrcvizyxlknshy.supabase.co";
-const SUPABASE_KEY = "sb_publishable_iH2ZBs9VRq9gAHQ75X8gMQ_DOB6DDfZ";
+const SUPABASE_URL="https://clihgidrcvizyxlknshy.supabase.co";
+const SUPABASE_KEY="sb_publishable_iH2ZBs9VRq9gAHQ75X8gMQ_DOB6DDfZ";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-const countries = {
-MY:{currency:"MYR",symbol:"RM",locale:"ms-MY"},
-MM:{currency:"MMK",symbol:"K",locale:"my-MM"},
-SG:{currency:"SGD",symbol:"$",locale:"en-SG"},
-TH:{currency:"THB",symbol:"฿",locale:"th-TH"},
-US:{currency:"USD",symbol:"$",locale:"en-US"},
-GB:{currency:"GBP",symbol:"£",locale:"en-GB"},
-ID:{currency:"IDR",symbol:"Rp",locale:"id-ID"},
-JP:{currency:"JPY",symbol:"¥",locale:"ja-JP"}
+const countries={
+MY:{currency:"MYR",symbol:"RM"},
+MM:{currency:"MMK",symbol:"K"},
+TH:{currency:"THB",symbol:"฿"},
+SG:{currency:"SGD",symbol:"$"},
+US:{currency:"USD",symbol:"$"},
+GB:{currency:"GBP",symbol:"£"},
+ID:{currency:"IDR",symbol:"Rp"},
+JP:{currency:"JPY",symbol:"¥"}
 };
 
 let currentUser=null;
-let isSuperAdmin=false;
-let currentProfile=null;
-let country=localStorage.getItem("hm_country")||"MY";
+let currentShop=null;
+let currentRole="";
+let shops=[];
+let products=[];
+let sales=[];
 let language=localStorage.getItem("hm_language")||"my";
-let sales=JSON.parse(localStorage.getItem("hm_sales")||"[]");
 
 function el(id){return document.getElementById(id)}
-function setStatus(message,good=true){
-el("connection").textContent=message;
-el("connection").className="status "+(good?"good":"bad");
+function status(msg,ok=true){
+el("status").textContent=msg;
+el("status").className="status "+(ok?"good":"bad");
 }
-function money(amount,code){
-let c=Object.values(countries).find(x=>x.currency===code)||countries.MY;
-return c.symbol+" "+Number(amount).toLocaleString(c.locale,{maximumFractionDigits:2});
+function escapeHTML(v){
+return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-function todaySales(){
-let today=new Date().toLocaleDateString();
-return sales.map((s,i)=>({...s,index:i}))
-.filter(s=>new Date(s.date).toLocaleDateString()===today);
+function money(n){
+let symbol=countries[currentShop?.country_code]?.symbol||"";
+return symbol+" "+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2});
 }
-function saveSales(){
-localStorage.setItem("hm_sales",JSON.stringify(sales));
-}
-function changeCountry(){
-country=el("country").value;
-localStorage.setItem("hm_country",country);
-renderSales();
-}
-function changeLanguage(){
+function setLanguage(){
 language=el("language").value;
 localStorage.setItem("hm_language",language);
 }
-function setAdminLanguage(){
-language=el("adminLanguage").value;
-localStorage.setItem("hm_language",language);
-el("language").value=language;
+function page(id){
+document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));
+el(id).classList.remove("hidden");
+if(id==="products")loadProducts();
+if(id==="reports")loadReports();
+if(id==="home")loadDashboard();
 }
-function setAdminCountry(){
-country=el("adminCountry").value;
-localStorage.setItem("hm_country",country);
-el("country").value=country;
-renderSales();
-}
-function addSale(){
-let name=el("product").value.trim();
-let price=Number(el("price").value);
-let qty=Number(el("qty").value);
-if(!name||!Number.isFinite(price)||price<=0||!Number.isInteger(qty)||qty<=0){
-alert("Please enter valid product, price and quantity.");
-return;
-}
-sales.push({
-name,price,qty,
-currency:countries[country].currency,
-country,
-user_id:currentUser?.id||null,
-date:new Date().toISOString()
-});
-saveSales();
-el("product").value="";
-el("price").value="";
-el("qty").value=1;
-renderSales();
-}
-function deleteSale(index){
-if(!confirm("Delete this sale?"))return;
-sales.splice(index,1);
-saveSales();
-renderSales();
-}
-function escapeHTML(value){
-return String(value??"").replace(/[&<>"']/g,c=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-})[c]);
-}
-function renderSales(){
-el("country").value=country;
-let todays=todaySales();
-let totals={};
-todays.forEach(s=>{
-let code=s.currency||"MMK";
-totals[code]=(totals[code]||0)+s.price*s.qty;
-});
-el("total").innerHTML=Object.keys(totals).length?
-Object.entries(totals).map(([code,total])=>"<div>"+money(total,code)+"</div>").join(""):"0";
-el("records").innerHTML=todays.length?
-todays.slice().reverse().map(s=>
-'<div class="record"><b>'+escapeHTML(s.name)+'</b><br>'+
-s.qty+' x '+money(s.price,s.currency||"MMK")+
-'<br><b>'+money(s.price*s.qty,s.currency||"MMK")+'</b>'+
-'<button class="danger" onclick="deleteSale('+s.index+')">Delete / ဖျက်ရန်</button></div>'
-).join("")
-:"<p>No sales yet | အရောင်းမရှိသေးပါ</p>";
-
-el("homeTotal").textContent=Object.entries(totals).map(([c,v])=>money(v,c)).join(" / ")||"0";
-el("homeCount").textContent=todays.length;
-el("salesReport").innerHTML=
-"<p>Transactions: "+sales.length+"</p>"+
-"<p>Today's transactions: "+todays.length+"</p>"+
-"<p>Data is stored locally on this browser.</p>";
-}
-
-// AUTH
 async function login(){
-let email=el("email").value.trim();
-let password=el("password").value;
+const email=el("email").value.trim();
+const password=el("password").value;
 if(!email||!password){alert("Enter email and password.");return;}
-setStatus("Signing in...",true);
+status("Signing in...");
 const {data,error}=await db.auth.signInWithPassword({email,password});
-if(error){setStatus(error.message,false);return;}
-await loadSession(data.user);
+if(error){status(error.message,false);return;}
+await loadApp(data.user);
 }
 async function signup(){
-let email=el("email").value.trim();
-let password=el("password").value;
-let fullName=el("fullName").value.trim();
-let phone=el("phone").value.trim();
-if(!email||password.length<6){alert("Enter email and password (minimum 6 characters).");return;}
-if(!fullName){alert("Enter your full name.");return;}
-setStatus("Creating account...",true);
-const {data,error}=await db.auth.signUp({
-email,password,
-options:{data:{full_name:fullName}}
-});
-if(error){setStatus(error.message,false);return;}
-if(data.user){
-if(data.session){
-await db.from("profiles").upsert({
-id:data.user.id,full_name:fullName,phone:phone||null
-});
-await loadSession(data.user);
-}else{
-setStatus("Account created. Please confirm your email, then login.",true);
-}
-}
+const full_name=el("newName").value.trim();
+const email=el("newEmail").value.trim();
+const password=el("newPassword").value;
+if(!full_name||!email||password.length<8){alert("Enter name, valid email and password of at least 8 characters.");return;}
+status("Creating account...");
+const {data,error}=await db.auth.signUp({email,password,options:{data:{full_name}}});
+if(error){status(error.message,false);return;}
+if(data.session){await loadApp(data.user);}
+else{status("Account created. Check email if confirmation is required.");}
 }
 async function logout(){
 await db.auth.signOut();
-currentUser=null;
-isSuperAdmin=false;
-el("appSection").classList.add("hidden");
-el("authSection").classList.remove("hidden");
-el("adminTab").classList.add("hidden");
-setStatus("Logged out.",true);
+currentUser=null;currentShop=null;shops=[];products=[];
+el("app").classList.add("hidden");
+el("auth").classList.remove("hidden");
+status("Logged out.");
 }
-async function loadSession(user){
+async function loadApp(user){
 currentUser=user;
-el("authSection").classList.add("hidden");
-el("appSection").classList.remove("hidden");
-el("userInfo").textContent="Signed in: "+user.email;
-setStatus("Signed in. Checking account permissions...",true);
-await loadProfile();
-await checkAdmin();
-showPage("home");
-renderSales();
+el("auth").classList.add("hidden");
+el("app").classList.remove("hidden");
+el("userInfo").textContent="Signed in: "+(user.email||user.id);
+status("Loading shop access...");
+const {data:adminData,error:adminError}=await db.rpc("is_platform_admin");
+const isAdmin=!adminError&&adminData===true;
+const {data:members,error}=await db.from("shop_memberships")
+.select("shop_id,role,is_active").eq("user_id",user.id).eq("is_active",true);
+if(error){status("Membership error: "+error.message,false);return;}
+const ids=(members||[]).map(m=>m.shop_id);
+currentRole=isAdmin?"super_admin":(members?.[0]?.role||"user");
+if(isAdmin){
+const result=await db.from("shops").select("*").order("created_at",{ascending:false});
+if(result.error){status(result.error.message,false);return;}
+shops=result.data||[];
+}else{
+const result=await db.from("shops").select("*").in("id",ids).eq("is_active",true);
+if(result.error){status(result.error.message,false);return;}
+shops=result.data||[];
 }
-async function loadProfile(){
-const {data,error}=await db.from("profiles")
-.select("*").eq("id",currentUser.id).maybeSingle();
-if(error){console.log(error.message);return;}
-currentProfile=data;
-if(!data){
-const {data:created,error:createError}=await db.from("profiles")
-.upsert({id:currentUser.id,full_name:currentUser.user_metadata?.full_name||""})
-.select().maybeSingle();
-if(!createError)currentProfile=created;
-}
-}
-
-// ADMIN PERMISSION
-async function checkAdmin(){
-const {data,error}=await db.rpc("is_platform_admin");
-if(error){
-isSuperAdmin=false;
-setStatus("Logged in. Admin permission could not be verified: "+error.message,false);
+if(!shops.length){
+status("No active shop access. Ask Super Admin to assign a shop.",false);
+el("shopSelect").innerHTML="";
 return;
 }
-isSuperAdmin=data===true;
-el("adminTab").classList.toggle("hidden",!isSuperAdmin);
-el("accountRole").textContent=isSuperAdmin?"Super Admin":"User";
-if(isSuperAdmin){
-setStatus("Connected. Super Admin access verified.",true);
-await refreshAdmin();
-}else{
-setStatus("Connected. Standard user account.",true);
+el("shopSelect").innerHTML=shops.map(s=>'<option value="'+s.id+'">'+escapeHTML(s.name)+" ("+escapeHTML(s.currency_code)+")</option>").join("");
+el("role").textContent=currentRole;
+status("Login successful. Shop access verified.");
+await selectShop();
 }
+async function selectShop(){
+const id=el("shopSelect").value;
+currentShop=shops.find(s=>s.id===id);
+if(!currentShop)return;
+el("shopInfo").textContent=currentShop.name+" | "+currentShop.country_code+" | "+currentShop.currency_code;
+await loadProducts();
+await loadDashboard();
 }
-
-// NAVIGATION
-function showPage(page){
-if(page==="admin"&&!isSuperAdmin){alert("Super Admin access only.");return;}
-document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
-el("page-"+page).classList.remove("hidden");
-if(page==="sales"||page==="home"||page==="pos")renderSales();
-if(page==="admin"&&isSuperAdmin)refreshAdmin();
+async function loadProducts(){
+if(!currentShop)return;
+const {data,error}=await db.from("products").select("*")
+.eq("shop_id",currentShop.id).eq("is_active",true)
+.order("product_name");
+if(error){status("Products: "+error.message,false);return;}
+products=data||[];
+el("productCount").textContent=products.length;
+el("productsTable").innerHTML=products.map(p=>
+"<tr><td>"+escapeHTML(p.product_name)+"</td><td>"+money(p.cost_price)+
+"</td><td>"+money(p.selling_price)+"</td><td>"+Number(p.stock_quantity)+
+(Number(p.stock_quantity)<=Number(p.low_stock_level)?" ⚠ Low":"")+"</td></tr>"
+).join("")||"<tr><td colspan='4'>No products yet.</td></tr>";
+el("saleProduct").innerHTML=products.map(p=>
+'<option value="'+p.id+'">'+escapeHTML(p.product_name)+" — "+money(p.selling_price)+" (Stock: "+p.stock_quantity+")</option>"
+).join("");
+showProductPrice();
 }
-
-// ADMIN DATA
-async function loadUsers(){
-if(!isSuperAdmin)return;
-const {data,error}=await db.from("profiles")
-.select("id,full_name,phone,created_at")
-.order("created_at",{ascending:false}).limit(100);
-if(error){el("usersTable").innerHTML="<tr><td>"+escapeHTML(error.message)+"</td></tr>";return;}
-el("userCount").textContent=data.length;
-el("usersTable").innerHTML=data.map(u=>
-"<tr><td>"+escapeHTML(u.full_name||"")+"</td><td>"+escapeHTML(u.phone||"")+
-"</td><td><small>"+escapeHTML(u.id)+"</small></td></tr>"
-).join("")||"<tr><td>No users found</td></tr>";
+function showProductPrice(){
+const p=products.find(x=>x.id===el("saleProduct").value);
+el("salePrice").textContent=p?"Price: "+money(p.selling_price)+" | Stock: "+p.stock_quantity:"No product selected";
 }
-async function loadShops(){
-if(!isSuperAdmin)return;
-const {data,error}=await db.from("shops")
-.select("*").order("created_at",{ascending:false});
-if(error){el("shopsList").textContent=error.message;return;}
-el("shopCount").textContent=data.length;
-el("shopsList").innerHTML=data.map(s=>
-'<div class="record"><b>'+escapeHTML(s.name)+'</b><br>'+
-escapeHTML(s.country_code)+" | "+escapeHTML(s.currency_code)+
-" | "+(s.is_active?"Active":"Inactive")+
-'<br><small>'+escapeHTML(s.id)+'</small></div>'
-).join("")||"<p>No shops created.</p>";
-}
-async function createShop(){
-if(!isSuperAdmin){alert("Admin only.");return;}
-let name=el("shopName").value.trim();
-let code=el("shopCountry").value;
-if(!name){alert("Enter shop name.");return;}
-const c=countries[code];
-const {data,error}=await db.from("shops").insert({
-name,
-country_code:code,
-currency_code:c.currency,
-currency_symbol:c.symbol,
-timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
-is_active:true
+async function addProduct(){
+if(!currentShop){alert("Select a shop first.");return;}
+if(!["owner","manager","super_admin"].includes(currentRole)){alert("Only Owner or Manager can add products.");return;}
+const name=el("pName").value.trim();
+const cost=Number(el("pCost").value);
+const price=Number(el("pPrice").value);
+const stock=Number(el("pStock").value);
+const low=Number(el("pLow").value||5);
+if(!name||!Number.isFinite(cost)||cost<0||!Number.isFinite(price)||price<0||!Number.isFinite(stock)||stock<0){alert("Enter valid product details.");return;}
+const {data,error}=await db.from("products").insert({
+shop_id:currentShop.id,product_name:name,barcode:el("pBarcode").value.trim()||null,
+category:el("pCategory").value.trim()||null,cost_price:cost,
+selling_price:price,stock_quantity:stock,low_stock_level:low,
+currency_code:currentShop.currency_code,is_active:true
 }).select();
-if(error){alert("Shop creation failed: "+error.message);return;}
-el("shopName").value="";
-alert("Shop created successfully.");
-await loadShops();
+if(error){alert("Product save failed: "+error.message);return;}
+["pName","pBarcode","pCategory","pCost","pPrice","pStock"].forEach(id=>el(id).value="");
+el("pLow").value="5";
+alert("Product saved.");
+await loadProducts();
 }
-async function loadMemberships(){
-if(!isSuperAdmin)return;
-const {data,error}=await db.from("shop_memberships")
-.select("id,shop_id,user_id,role,is_active")
-.order("created_at",{ascending:false}).limit(100);
-if(error){el("membersTable").innerHTML="<tr><td>"+escapeHTML(error.message)+"</td></tr>";return;}
-el("memberCount").textContent=data.length;
-el("membersTable").innerHTML=data.map(m=>
-"<tr><td><small>"+escapeHTML(m.shop_id)+"</small></td>"+
-"<td><small>"+escapeHTML(m.user_id)+"</small></td>"+
-"<td>"+escapeHTML(m.role)+"</td>"+
-"<td>"+(m.is_active?"Active":"Inactive")+"</td></tr>"
-).join("")||"<tr><td>No memberships found</td></tr>";
+async function addSale(){
+if(!currentShop){alert("Select a shop.");return;}
+const p=products.find(x=>x.id===el("saleProduct").value);
+const qty=Number(el("saleQty").value);
+if(!p||!Number.isInteger(qty)||qty<1){alert("Select a product and valid quantity.");return;}
+if(Number(p.stock_quantity)<qty){alert("Not enough stock.");return;}
+const total=Number(p.selling_price)*qty;
+const {data,error}=await db.from("sales").insert({
+shop_id:currentShop.id,user_id:currentUser.id,
+product_name:p.product_name,quantity:qty,
+unit_price:p.selling_price,total_amount:total,
+currency_code:currentShop.currency_code
+}).select();
+if(error){el("saleMessage").textContent=error.message;return;}
+let warning="";
+if(["owner","manager","super_admin"].includes(currentRole)){
+const newStock=Number(p.stock_quantity)-qty;
+const update=await db.from("products").update({stock_quantity:newStock}).eq("id",p.id).eq("shop_id",currentShop.id);
+if(update.error){warning=" Sale saved, but stock update failed: "+update.error.message;}
+else{
+const movement=await db.from("stock_movements").insert({
+shop_id:currentShop.id,product_id:p.id,movement_type:"sale",
+quantity:qty,unit_cost:p.cost_price,reference_id:data?.[0]?.id||null,
+created_by:currentUser.id,notes:"POS sale"
+});
+if(movement.error)warning=" Stock updated; movement log failed: "+movement.error.message;
 }
-async function refreshAdmin(){
-if(!isSuperAdmin)return;
-await Promise.all([loadUsers(),loadShops(),loadMemberships()]);
+}else{
+warning=" Cashier sale saved. Stock update requires owner/manager permission.";
 }
-window.addEventListener("online",()=>setStatus("Internet connected.",true));
-window.addEventListener("offline",()=>setStatus("Internet disconnected. Online features unavailable.",false));
-
-// STARTUP
+el("saleMessage").textContent="Sale saved: "+money(total)+"."+warning;
+el("saleQty").value="1";
+await loadProducts();
+await loadDashboard();
+await loadReports();
+}
+async function loadReports(){
+if(!currentShop)return;
+const {data,error}=await db.from("sales").select("*")
+.eq("shop_id",currentShop.id).order("created_at",{ascending:false}).limit(100);
+if(error){el("salesList").textContent=error.message;return;}
+sales=data||[];
+const total=sales.reduce((a,s)=>a+Number(s.total_amount||0),0);
+el("reportTotal").textContent=money(total);
+el("reportCount").textContent=sales.length;
+el("salesList").innerHTML=sales.map(s=>
+'<div class="record"><b>'+escapeHTML(s.product_name)+'</b><br>'+
+escapeHTML(s.quantity)+" × "+money(s.unit_price)+" = <b>"+money(s.total_amount)+
+"</b><br><small>"+new Date(s.created_at).toLocaleString()+"</small></div>"
+).join("")||"<p>No sales records.</p>";
+}
+async function loadDashboard(){
+if(!currentShop)return;
+const start=new Date();start.setHours(0,0,0,0);
+const {data,error}=await db.from("sales").select("total_amount,created_at")
+.eq("shop_id",currentShop.id).gte("created_at",start.toISOString());
+if(error){status("Dashboard: "+error.message,false);return;}
+const rows=data||[];
+el("todayTotal").textContent=money(rows.reduce((a,s)=>a+Number(s.total_amount||0),0));
+el("todayCount").textContent=rows.length;
+el("productCount").textContent=products.length;
+}
 async function start(){
 el("language").value=language;
-el("adminLanguage").value=language;
-el("country").value=country;
-el("adminCountry").value=country;
-try{
 const {data,error}=await db.auth.getSession();
-if(error)throw error;
-if(data.session)await loadSession(data.session.user);
-else setStatus("Supabase ready. Please login.",true);
-}catch(e){
-setStatus("Connection error: "+e.message,false);
-}
+if(error){status(error.message,false);return;}
+if(data.session)await loadApp(data.session.user);
+else status("Supabase ready. Please login.");
 db.auth.onAuthStateChange((event,session)=>{
 if(event==="SIGNED_OUT"){
-currentUser=null;
-isSuperAdmin=false;
-el("appSection").classList.add("hidden");
-el("authSection").classList.remove("hidden");
+currentUser=null;currentShop=null;
+el("app").classList.add("hidden");
+el("auth").classList.remove("hidden");
 }
 });
 }
+window.addEventListener("online",()=>status("Internet connected."));
+window.addEventListener("offline",()=>status("Internet disconnected. Online functions unavailable.",false));
 start();
 </script>
 </body>
-  </html>
-  
+</html>
