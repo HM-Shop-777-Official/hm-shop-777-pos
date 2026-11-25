@@ -53,6 +53,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
 </section>
 <div class="app-layout">
 <aside class="side-nav" aria-label="Main navigation">
+ <button data-page="dashboard" class="active"><span class="menu-icon">🏠</span>Dashboard / ပင်မစာမျက်နှာ</button>
 <button data-page="pos"><span class="menu-icon">🛒</span>Sales / အရောင်း</button>
 <button data-page="receipts"><span class="menu-icon">🧾</span>Receipts / ပြေစာများ</button>
 <button data-page="shift"><span class="menu-icon">🕒</span>Shift / အလုပ်ချိန်</button>
@@ -158,7 +159,7 @@ function say(message,ok=true){$("status").textContent=message;$("status").classN
 function money(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 const pageNames=["dashboard","pos","receipts","shift","products","settings","backoffice","apps","support","reports"];
-function showPage(name){pageNames.forEach(p=>{const el=$(p+"Page");if(el)el.classList.toggle("hidden",p!==name);});document.querySelectorAll(".side-nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));if(name==="receipts")loadReceipts();if(name==="settings")syncSettings();}
+function showPage(name){pageNames.forEach(p=>{const el=$(p+"Page");if(el)el.classList.toggle("hidden",p!==name);});document.querySelectorAll(".side-nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));if(name==="receipts")loadReceipts();if(name==="settings")syncSettings();if(name==="dashboard"&&currentShop){loadDashboard();loadProducts();}}
 document.querySelectorAll(".side-nav button[data-page], [data-page=reports]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
 $("language").value=localStorage.getItem("hm_language")||"my";
 $("language").addEventListener("change",()=>{localStorage.setItem("hm_language",$("language").value);$("settingsLanguage").value=$("language").value;});
@@ -179,7 +180,11 @@ async function signup(){
  if(error)return say(error.message,false);
  say("Account created. Email confirmation လိုအပ်နိုင်ပါတယ်။");
 }
-async function logout(){await db.auth.signOut();currentUser=null;currentShop=null;$("appPanel").classList.add("hidden");$("authPanel").classList.remove("hidden");$("who").textContent="";say("Logged out.");}
+async function logout(){
+ const {error}=await db.auth.signOut();if(error)return say("Logout failed: "+error.message,false);
+ currentUser=null;currentShop=null;currentRole="";shops=[];products=[];
+ $("appPanel").classList.add("hidden");$("authPanel").classList.remove("hidden");$("who").textContent="";say("Logged out.");
+}
 $("loginBtn").onclick=login;$("signupBtn").onclick=signup;$("logoutBtn").onclick=logout;
 
 async function loadMemberships(){
@@ -190,10 +195,12 @@ async function loadMemberships(){
   db.rpc("is_platform_admin")
  ]);
  if(memErr)return say("Shop membership error: "+memErr.message,false);
- const ids=(membership||[]).map(x=>x.shop_id);
- currentRole=(membership||[])[0]?.role||"";
+ // Fail closed: if the admin check fails, do not treat the user as a platform admin.
+ if(adminErr)return say("Admin permission check failed: "+adminErr.message+". Please try again.",false);
+ const activeMemberships=membership||[];
+ const ids=activeMemberships.map(x=>x.shop_id);
  let query=db.from("shops").select("id,name,currency_code,currency_symbol,is_active").eq("is_active",true);
- if(!isAdmin && !adminErr)query=query.in("id",ids.length?ids:["00000000-0000-0000-0000-000000000000"]);
+ if(isAdmin!==true)query=query.in("id",ids.length?ids:["00000000-0000-0000-0000-000000000000"]);
  const {data:shopData,error}=await query.order("name");
  if(error)return say(error.message,false);
  shops=shopData||[];
@@ -205,8 +212,17 @@ async function loadMemberships(){
  await loadShop();
 }
 $("shopSelect").addEventListener("change",async()=>{currentShop=shops.find(s=>s.id===$("shopSelect").value);await loadShop();});
-async function loadShop(){if(!currentShop)return;await Promise.all([loadProducts(),loadDashboard(),loadReports()]);syncSettings();say("Shop loaded: "+currentShop.name);}
-function canManage(){return ["owner","manager"].includes(currentRole);}
+async function loadShop(){
+ if(!currentShop)return;
+ const {data:membership,error}=await db.from("shop_memberships").select("role").eq("user_id",currentUser.id).eq("shop_id",currentShop.id).eq("is_active",true).maybeSingle();
+ if(error){say("Shop role check failed: "+error.message,false);return;}
+ const {data:isAdmin,error:adminError}=await db.rpc("is_platform_admin");
+ if(adminError){say("Admin permission check failed: "+adminError.message,false);return;}
+ currentRole=isAdmin===true?"platform_admin":(membership?.role||"");
+ await Promise.all([loadProducts(),loadDashboard(),loadReports()]);
+ syncSettings();showPage("dashboard");say("Shop loaded: "+currentShop.name);
+}
+function canManage(){return ["owner","manager","platform_admin"].includes(currentRole);}
 async function loadProducts(){
  const {data,error}=await db.from("products").select("*").eq("shop_id",currentShop.id).eq("is_active",true).order("product_name");
  if(error)return say("Products: "+error.message,false);
@@ -245,6 +261,7 @@ async function uploadProductImage(file){
  return data.publicUrl;
 }
 async function addProduct(){
+ if(!currentUser||!currentShop)return say("အရင်ဆုံး Login ဝင်ပြီး Shop ရွေးပါ။",false);
  if(!canManage())return say("Product အသစ်ထည့်ရန် Owner/Manager ခွင့်ပြုချက်လိုပါတယ်။",false);
  const name=$("pName").value.trim(),price=Number($("pPrice").value),cost=Number($("pCost").value),stock=Number($("pStock").value),low=Number($("pLow").value);
  if(!name||!Number.isFinite(price)||price<0||cost<0||stock<0||low<0)return say("ပစ္စည်းအချက်အလက် မှန်ကန်စွာဖြည့်ပါ။",false);
@@ -252,67 +269,4 @@ async function addProduct(){
   let image_url=null;const file=selectedProductImage;if(file)image_url=await uploadProductImage(file);
   const {error}=await db.from("products").insert({shop_id:currentShop.id,product_name:name,barcode:$("pBarcode").value.trim()||null,category:$("pCategory").value.trim()||null,cost_price:cost,selling_price:price,stock_quantity:stock,low_stock_level:low,currency_code:currentShop.currency_code||null,image_url});
   if(error)throw error;
-  ["pName","pBarcode","pCategory","pCost","pPrice","pStock","pImage","pCamera"].forEach(id=>$(id).value="");selectedProductImage=null;$("pCost").value="0";$("pPrice").value="0";$("pStock").value="0";$("imagePreview").classList.add("hidden");
-  await loadProducts();await loadDashboard();say("Product saved / ပစ္စည်းသိမ်းပြီးပါပြီ။");
- }catch(e){say("Save failed: "+e.message,false);}
-}
-$("addProductBtn").onclick=addProduct;
-
-async function addSale(){
- const p=products.find(x=>x.id===$("saleProduct").value),qty=Number($("saleQty").value);
- if(!p)return say("ပစ္စည်းရွေးပါ။",false);
- if(!Number.isFinite(qty)||qty<=0)return say("အရေအတွက် မှန်ကန်စွာထည့်ပါ။",false);
- if(qty>Number(p.stock_quantity||0))return say("လက်ကျန်ပစ္စည်း မလုံလောက်ပါ။",false);
- $("saleBtn").disabled=true;
- try{
-  // RPC signature must match public.process_pos_sale in this Supabase project.
-  const {data,error}=await db.rpc("process_pos_sale",{
-   p_shop_id:currentShop.id,
-   p_product_id:p.id,
-   p_quantity:qty,
-   p_payment_method:$("payment").value
-  });
-  if(error)throw error;
-  $("saleQty").value="1";$("saleNotes").value="";
-  await loadProducts();await loadDashboard();await loadReports();
-  say("Sale completed / အရောင်းအောင်မြင်ပါသည်။ Reference: "+String(data??""));
- }catch(e){say("Sale failed: "+e.message,false);}
- finally{$("saleBtn").disabled=false;}
-}
-$("saleBtn").onclick=addSale;
-
-function dateStart(period){
- const d=new Date();d.setHours(0,0,0,0);
- if(period==="week"){const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);}
- if(period==="month")d.setDate(1);
- return d.toISOString();
-}
-async function loadReports(){
- if(!currentShop)return;
- const start=dateStart($("reportPeriod").value);
- const {data,error}=await db.from("sales").select("id,product_name,quantity,total_amount,payment_method,created_at").eq("shop_id",currentShop.id).gte("created_at",start).order("created_at",{ascending:false}).limit(500);
- if(error)return say("Reports: "+error.message,false);
- const rows=data||[],total=rows.reduce((s,r)=>s+Number(r.total_amount||0),0),qty=rows.reduce((s,r)=>s+Number(r.quantity||0),0);
- $("rSales").textContent=money(total);$("rQty").textContent=qty;$("rCount").textContent=rows.length;
- $("reportRows").innerHTML=rows.map(r=>`<tr><td>${new Date(r.created_at).toLocaleString()}</td><td>${esc(r.product_name||"")}</td><td>${esc(r.quantity||0)}</td><td>${money(r.total_amount)}</td><td>${esc(r.payment_method||"cash")}</td></tr>`).join("")||'<tr><td colspan="5">No sales in this period.</td></tr>';
-}
-$("reportPeriod").addEventListener("change",loadReports);
-async function loadReceipts(){
- if(!currentShop)return;
- const {data,error}=await db.from("sales").select("id,product_name,quantity,total_amount,payment_method,created_at").eq("shop_id",currentShop.id).order("created_at",{ascending:false}).limit(100);
- if(error)return say("Receipts: "+error.message,false);
- $("receiptRows").innerHTML=(data||[]).map(r=>`<tr><td>${new Date(r.created_at).toLocaleString()}</td><td>${esc(r.product_name||"")}</td><td>${esc(r.quantity||0)}</td><td>${money(r.total_amount)}</td><td>${esc(r.payment_method||"cash")}</td></tr>`).join("")||'<tr><td colspan="5">No receipts yet. / ပြေစာမရှိသေးပါ။</td></tr>';
-}
-async function loadDashboard(){
- const start=new Date();start.setHours(0,0,0,0);
- const {data,error}=await db.from("sales").select("total_amount").eq("shop_id",currentShop.id).gte("created_at",start.toISOString());
- if(error)return say("Dashboard: "+error.message,false);
- const todayTotal=(data||[]).reduce((s,r)=>s+Number(r.total_amount||0),0);$("todaySales").textContent=money(todayTotal);$("backofficeSales").textContent=money(todayTotal);$("backofficeItems").textContent=products.length;$("backofficeLowStock").textContent=products.filter(p=>Number(p.stock_quantity||0)<=Number(p.low_stock_level||5)).length;
-}
-(async()=>{
- const {data}=await db.auth.getSession();
- if(data.session){currentUser=data.session.user;await loadMemberships();}
-})();
-</script>
-</body>
-</html>
+  ["pName","pBarco
