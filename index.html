@@ -1,272 +1,536 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="my">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HM Shop 777 POS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif;color:#172033;background:#f3f6fb}
-*{box-sizing:border-box}body{margin:0}header{background:#123b75;color:white;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-main{max-width:1100px;margin:auto;padding:14px}.panel{background:white;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #10204010}
-h1{font-size:20px;margin:0}h2{font-size:18px;margin:0 0 12px}label{display:block;font-size:14px;margin:9px 0 4px}
+:root{font-family:system-ui,"Noto Sans Myanmar",sans-serif;color:#172033;background:#f3f6fb}
+*{box-sizing:border-box}body{margin:0}header{background:#123b75;color:white;padding:16px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+main{max-width:1200px;margin:auto;padding:12px}
+.panel{background:white;border-radius:13px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #10204010}
+h1{font-size:21px;margin:0}h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:14px;margin:9px 0 4px}
 input,select,textarea,button{font:inherit;width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;background:white;color:#172033}
-textarea{min-height:65px}button{background:#1759a6;color:white;border:0;font-weight:650;cursor:pointer;margin-top:10px}
-button.secondary{background:#e8eef7;color:#17365e}button.danger{background:#b42318}.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.app-layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:14px;align-items:start;margin-top:12px}
-.side-nav{background:#fff;border:1px solid #e3eaf3;border-radius:14px;padding:9px;position:sticky;top:10px}
-.side-nav button{display:flex;align-items:center;gap:10px;text-align:left;width:100%;margin:3px 0;padding:12px;background:transparent;color:#26364d;border-radius:9px;font-weight:600}
-.side-nav button.active,.side-nav button:hover{background:#eaf2ff;color:#124b91}
-.side-nav .nav-separator{border-top:1px solid #e8edf4;margin:8px 4px}
-.page-content{min-width:0}.page-content>.panel:first-child{margin-top:0}
-.menu-icon{width:22px;text-align:center;font-size:17px}
-@media(max-width:700px){.app-layout{grid-template-columns:1fr}.side-nav{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.side-nav button{font-size:13px;padding:10px 7px}.side-nav .nav-separator{display:none}}
-.hidden{display:none!important}.muted{color:#667085;font-size:13px}.status{padding:10px;border-radius:9px;margin:10px 0;background:#eef4ff;white-space:pre-wrap}
+button{background:#1759a6;color:white;border:0;font-weight:650;cursor:pointer;margin-top:9px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.secondary{background:#e8eef7;color:#17365e}
+.danger{background:#b42318}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.layout{display:grid;grid-template-columns:205px minmax(0,1fr);gap:12px}
+nav{background:white;border-radius:13px;padding:8px;align-self:start;position:sticky;top:8px}
+nav button{text-align:left;background:white;color:#26364d;margin:3px 0;padding:10px}
+nav button.active{background:#eaf2ff;color:#124b91}
+.hidden{display:none!important}.muted{color:#667085;font-size:13px}
+.status{padding:11px;border-radius:9px;background:#eef4ff;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .good{background:#e8f7ee;color:#17643a}.bad{background:#fff0f0;color:#a11}
-.cardlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.product{border:1px solid #e1e7ef;border-radius:12px;padding:10px;background:#fff}
-.product img{width:100%;height:145px;object-fit:cover;border-radius:8px;background:#edf1f6}
-.product strong{display:block;margin:7px 0}.product button{margin-top:6px}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;border-bottom:1px solid #e5eaf1;text-align:left}th{background:#f7f9fc}
-.tablewrap{overflow:auto}.preview{width:120px;height:120px;object-fit:cover;border-radius:10px;margin-top:8px}
-.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{background:#f4f7fc;padding:12px;border-radius:10px}.stat b{display:block;font-size:20px}
-@media(max-width:600px){.row{grid-template-columns:1fr}.statgrid{grid-template-columns:1fr 1fr}main{padding:9px}.panel{padding:13px}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stat{background:#f4f7fc;padding:13px;border-radius:10px}
+.stat b{display:block;font-size:21px;margin-top:5px}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:9px;border-bottom:1px solid #e5eaf1;text-align:left;white-space:nowrap}
+th{background:#f7f9fc}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.product{border:1px solid #e1e7ef;border-radius:12px;padding:10px}
+.product img{width:100%;height:135px;object-fit:cover;border-radius:8px}
+.preview{width:120px;height:120px;object-fit:cover;border-radius:10px}
+@media(max-width:700px){.layout{grid-template-columns:1fr}nav{position:static;display:grid;grid-template-columns:repeat(2,1fr)}nav button{font-size:12px;padding:9px}.row{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}main{padding:7px}.panel{padding:12px}}
 </style>
 </head>
 <body>
-<header><h1>HM Shop 777</h1><div id="who" class="muted" style="color:#e5edff"></div></header>
+<header>
+ <h1>HM Shop 777 POS</h1>
+ <div id="who">Not logged in</div>
+</header>
 <main>
-<div id="status" class="status">HM Shop 777 POS</div>
+<div id="status" class="status">HM Shop 777 POS Ready</div>
 
+<!-- AUTH -->
 <section id="authPanel" class="panel">
 <h2>Login / အကောင့်ဝင်ရန်</h2>
-<label>Email</label><input id="email" type="email" autocomplete="username" placeholder="Email">
-<label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password">
-<div class="row"><button id="loginBtn">Login / ဝင်မည်</button><button id="signupBtn" class="secondary">Sign up / အကောင့်ဖွင့်</button></div>
+<label>Email</label>
+<input id="email" type="email" autocomplete="username">
+<label>Password</label>
+<input id="password" type="password" autocomplete="current-password">
+<div class="row">
+<button id="loginBtn">Login / ဝင်မည်</button>
+<button id="signupBtn" class="secondary">Sign up / အကောင့်ဖွင့်</button>
+</div>
 </section>
 
+<!-- APPLICATION -->
 <section id="appPanel" class="hidden">
-<section class="panel">
-<div class="row"><div><label>Language / ဘာသာစကား</label><select id="language"><option value="my">မြန်မာ</option><option value="en">English</option></select></div>
-<div><label>Select Shop / ဆိုင်ရွေးရန်</label><select id="shopSelect"></select></div></div>
+<div class="panel">
+<div class="row">
+<div>
+<label>Language / ဘာသာစကား</label>
+<select id="language">
+<option value="my">မြန်မာ</option>
+<option value="en">English</option>
+</select>
+</div>
+<div>
+<label>Select Shop / ဆိုင်ရွေးရန်</label>
+<select id="shopSelect"></select>
+</div>
+</div>
 <button id="logoutBtn" class="secondary">Logout / ထွက်ရန်</button>
-</section>
-<div class="app-layout">
-<aside class="side-nav" aria-label="Main navigation">
- <button data-page="dashboard" class="active"><span class="menu-icon">🏠</span>Dashboard / ပင်မစာမျက်နှာ</button>
-<button data-page="pos"><span class="menu-icon">🛒</span>Sales / အရောင်း</button>
-<button data-page="receipts"><span class="menu-icon">🧾</span>Receipts / ပြေစာများ</button>
-<button data-page="shift"><span class="menu-icon">🕒</span>Shift / အလုပ်ချိန်</button>
-<button data-page="products"><span class="menu-icon">📦</span>Items / ပစ္စည်းများ</button>
-<button data-page="settings"><span class="menu-icon">⚙️</span>Settings / ဆက်တင်</button>
-<div class="nav-separator"></div>
-<button data-page="backoffice"><span class="menu-icon">📊</span>Back office / စီမံခန့်ခွဲမှု</button>
-<button data-page="apps"><span class="menu-icon">🧩</span>Apps / အက်ပ်များ</button>
-<button data-page="support"><span class="menu-icon">💬</span>Support / အကူအညီ</button>
-</aside>
-<div class="page-content">
+</div>
+
+<div class="layout">
+<nav>
+<button class="active" data-page="dashboard">🏠 Dashboard</button>
+<button data-page="pos">🛒 Sales / အရောင်း</button>
+<button data-page="products">📦 Products</button>
+<button data-page="stock">📥 Stock</button>
+<button data-page="customers">👥 Customers</button>
+<button data-page="suppliers">🚚 Suppliers</button>
+<button data-page="purchases">🧾 Purchases</button>
+<button data-page="receipts">📄 Receipts</button>
+<button data-page="reports">📊 Reports</button>
+<button data-page="orders">🛍️ Online Orders</button>
+<button data-page="promotions">🎁 Promotions</button>
+<button data-page="settings">⚙️ Settings</button>
+</nav>
+
+<div>
+
+<!-- DASHBOARD -->
 <section id="dashboardPage" class="panel">
 <h2>Dashboard / ပင်မစာမျက်နှာ</h2>
-<div class="statgrid"><div class="stat">Today's Sales<b id="todaySales">0</b></div><div class="stat">Products<b id="productCount">0</b></div><div class="stat">Low Stock<b id="lowStockCount">0</b></div></div>
-</section>
-
-<section id="posPage" class="panel hidden">
-<h2>POS / အရောင်းလုပ်ရန်</h2>
-<label>Product / ပစ္စည်း</label><select id="saleProduct"></select>
-<div class="row"><div><label>Quantity / အရေအတွက်</label><input id="saleQty" type="number" min="0.01" step="0.01" value="1"></div>
-<div><label>Payment / ငွေပေးချေမှု</label><select id="payment"><option value="cash">Cash / ငွေသား</option><option value="qr">QR</option><option value="bank">Bank / ဘဏ်</option></select></div></div>
-<label>Notes / မှတ်ချက်</label><input id="saleNotes" placeholder="Optional">
-<div id="saleInfo" class="muted"></div><button id="saleBtn">Complete Sale / အရောင်းပြီးစီး</button>
-</section>
-
-<section id="productsPage" class="panel hidden">
-<h2>Add Product / ပစ္စည်းအသစ်ထည့်ရန်</h2>
-<label>Product Name / ပစ္စည်းအမည်</label><input id="pName" placeholder="Product name">
-<div class="row"><div><label>Barcode</label><input id="pBarcode"></div><div><label>Category / အမျိုးအစား</label><input id="pCategory"></div></div>
-<div class="row"><div><label>Cost Price / ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="0.01" value="0"></div><div><label>Selling Price / ရောင်းဈေး</label><input id="pPrice" type="number" min="0" step="0.01" value="0"></div></div>
-<div class="row"><div><label>Opening Stock / လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0" step="0.01" value="0"></div><div><label>Low Stock Alert / သတိပေးအရေအတွက်</label><input id="pLow" type="number" min="0" step="0.01" value="5"></div></div>
-<label>Product Photo / ပစ္စည်းဓာတ်ပုံ</label>
-<div class="row">
- <div><label>Camera / ဓာတ်ပုံရိုက်ရန်</label><input id="pCamera" type="file" accept="image/*" capture="environment"></div>
- <div><label>Gallery / ဖုန်းထဲမှ ပုံရွေးရန်</label><input id="pImage" type="file" accept="image/*"></div>
+<div class="stats">
+<div class="stat">Today's Sales<b id="todaySales">0.00</b></div>
+<div class="stat">Products<b id="productCount">0</b></div>
+<div class="stat">Low Stock<b id="lowStock">0</b></div>
 </div>
-<p class="muted">Camera ဖြင့် ဓာတ်ပုံရိုက်နိုင်သလို Gallery / Files မှလည်း ရွေးနိုင်ပါတယ်။</p>
-<img id="imagePreview" class="preview hidden" alt="Product preview">
-<button id="addProductBtn">Save Product / သိမ်းမည်</button>
-<hr style="border:0;border-top:1px solid #e5eaf1;margin:18px 0">
-<h2>Product List / ပစ္စည်းစာရင်း</h2>
-<div id="productList" class="cardlist"></div>
+<h3>Recent Sales</h3>
+<div class="tablewrap">
+<table><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th></tr></thead>
+<tbody id="recentSales"></tbody></table>
+</div>
 </section>
 
-<section id="reportsPage" class="panel hidden">
-<h2>Reports / အရောင်းစာရင်း</h2>
-<label>Period / ကာလ</label><select id="reportPeriod"><option value="today">Today / ယနေ့</option><option value="week">This Week / ဒီအပတ်</option><option value="month">This Month / ဒီလ</option></select>
-<div class="statgrid"><div class="stat">Sales<b id="rSales">0</b></div><div class="stat">Items Sold<b id="rQty">0</b></div><div class="stat">Transactions<b id="rCount">0</b></div></div>
-<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th></tr></thead><tbody id="reportRows"></tbody></table></div>
-<p class="muted">မှတ်ချက်: အမြတ်အစွန်းစာရင်းကို ရောင်းချချိန် cost price ကို sales table ထဲတွင် သိမ်းဆည်းထားကြောင်း အတည်ပြုပြီးမှ ထည့်သွင်းမည်။</p>
+<!-- POS -->
+<section id="posPage" class="panel hidden">
+<h2>POS / အရောင်း</h2>
+<label>Product / ပစ္စည်း</label>
+<select id="saleProduct"></select>
+<div id="saleInfo" class="muted"></div>
+<div class="row">
+<div><label>Quantity</label><input id="saleQty" type="number" value="1" min="0.01" step="0.01"></div>
+<div><label>Payment</label>
+<select id="payment">
+<option value="cash">Cash</option>
+<option value="qr">QR</option>
+<option value="bank">Bank</option>
+</select></div>
+</div>
+<label>Customer / ဖောက်သည် (Optional)</label>
+<select id="saleCustomer"><option value="">Walk-in Customer</option></select>
+<label>Notes</label><input id="saleNotes">
+<div class="status">Total: <b id="saleTotal">0.00</b></div>
+<button id="saleBtn">Complete Sale / အရောင်းပြီးစီး</button>
 </section>
 
+<!-- PRODUCTS -->
+<section id="productsPage" class="panel hidden">
+<h2>Products / ပစ္စည်းများ</h2>
+<label>Product Name</label><input id="pName">
+<div class="row">
+<div><label>Barcode</label><input id="pBarcode"></div>
+<div><label>Category</label><input id="pCategory"></div>
+</div>
+<div class="row">
+<div><label>Cost Price</label><input id="pCost" type="number" min="0" value="0"></div>
+<div><label>Selling Price</label><input id="pPrice" type="number" min="0" value="0"></div>
+</div>
+<div class="row">
+<div><label>Opening Stock</label><input id="pStock" type="number" min="0" value="0"></div>
+<div><label>Low Stock Alert</label><input id="pLow" type="number" min="0" value="5"></div>
+</div>
+<label>Camera / ဓာတ်ပုံရိုက်ရန်</label>
+<input id="pCamera" type="file" accept="image/*" capture="environment">
+<label>Gallery / ပုံရွေးရန်</label>
+<input id="pImage" type="file" accept="image/*">
+<img id="preview" class="preview hidden" alt="Preview">
+<button id="saveProduct">Save Product / သိမ်းမည်</button>
+<div class="tablewrap">
+<table><thead><tr><th>Photo</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
+<tbody id="productRows"></tbody></table>
+</div>
+</section>
+
+<!-- STOCK -->
+<section id="stockPage" class="panel hidden">
+<h2>Stock Movement / ကုန်ပစ္စည်းအဝင်အထွက်</h2>
+<label>Product</label><select id="stockProduct"></select>
+<div class="row">
+<div><label>Movement</label>
+<select id="stockType"><option value="in">Stock In</option><option value="out">Stock Out</option><option value="adjustment">Adjustment</option></select></div>
+<div><label>Quantity</label><input id="stockQty" type="number" min="0.01" step="0.01" value="1"></div>
+</div>
+<label>Notes</label><input id="stockNotes">
+<button id="stockBtn">Save Stock Movement</button>
+</section>
+
+<!-- CUSTOMERS -->
+<section id="customersPage" class="panel hidden">
+<h2>Customers / ဖောက်သည်များ</h2>
+<label>Full Name</label><input id="cName">
+<div class="row">
+<div><label>Phone</label><input id="cPhone"></div>
+<div><label>Email</label><input id="cEmail" type="email"></div>
+</div>
+<button id="saveCustomer">Add Customer</button>
+<div class="tablewrap"><table>
+<thead><tr><th>Name</th><th>Phone</th><th>Member Code</th><th>Points</th></tr></thead>
+<tbody id="customerRows"></tbody></table></div>
+</section>
+
+<!-- SUPPLIERS -->
+<section id="suppliersPage" class="panel hidden">
+<h2>Suppliers / ကုန်ပစ္စည်းပေးသွင်းသူများ</h2>
+<label>Supplier Name</label><input id="sName">
+<label>Phone</label><input id="sPhone">
+<label>Email</label><input id="sEmail">
+<label>Address</label><textarea id="sAddress"></textarea>
+<button id="saveSupplier">Add Supplier</button>
+<div class="tablewrap"><table><thead><tr><th>Supplier</th><th>Phone</th><th>Email</th></tr></thead><tbody id="supplierRows"></tbody></table></div>
+</section>
+
+<!-- PURCHASES -->
+<section id="purchasesPage" class="panel hidden">
+<h2>Purchases / ကုန်ဝယ်ယူမှု</h2>
+<label>Supplier</label><select id="purchaseSupplier"></select>
+<label>Product</label><select id="purchaseProduct"></select>
+<div class="row">
+<div><label>Quantity</label><input id="purchaseQty" type="number" min="0.01" value="1"></div>
+<div><label>Unit Cost</label><input id="purchaseCost" type="number" min="0" value="0"></div>
+</div>
+<label>Invoice Number</label><input id="invoice">
+<button id="purchaseBtn">Save Purchase</button>
+</section>
+
+<!-- RECEIPTS -->
 <section id="receiptsPage" class="panel hidden">
-<h2>Receipts / အရောင်းပြေစာများ</h2>
-<p class="muted">ယနေ့နှင့် ယခင်အရောင်းမှတ်တမ်းများကို ဒီနေရာမှာ ကြည့်နိုင်ပါတယ်။</p>
-<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th></tr></thead><tbody id="receiptRows"></tbody></table></div>
+<h2>Receipts / ပြေစာများ</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th></tr></thead>
+<tbody id="receiptRows"></tbody></table></div>
 </section>
 
-<section id="shiftPage" class="panel hidden">
-<h2>Shift / အလုပ်ချိန်</h2>
-<p>ဆိုင်ဖွင့်ချိန်၊ ဆိုင်ပိတ်ချိန်၊ ဝန်ထမ်းတာဝန်ချိန်နှင့် ငွေစာရင်းကို ဒီနေရာမှာ စီမံနိုင်ရန် ပြင်ဆင်ထားပါတယ်။</p>
-<div class="status">Shift စနစ်ကို database နဲ့ ချိတ်ဆက်ပြီးမှ အလုပ်ချိန်ဖွင့်/ပိတ်မှတ်တမ်းတွေကို အမှန်တကယ် သိမ်းဆည်းနိုင်ပါမယ်။</div>
+<!-- REPORTS -->
+<section id="reportsPage" class="panel hidden">
+<h2>Reports / အစီရင်ခံစာ</h2>
+<select id="reportPeriod">
+<option value="today">Today</option>
+<option value="week">This Week</option>
+<option value="month">This Month</option>
+<option value="all">All</option>
+</select>
+<div class="stats">
+<div class="stat">Sales<b id="reportSales">0.00</b></div>
+<div class="stat">Quantity<b id="reportQty">0</b></div>
+<div class="stat">Transactions<b id="reportCount">0</b></div>
+</div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th></tr></thead><tbody id="reportRows"></tbody></table></div>
 </section>
 
+<!-- ORDERS -->
+<section id="ordersPage" class="panel hidden">
+<h2>Online Orders / အွန်လိုင်းအော်ဒါ</h2>
+<div class="tablewrap"><table><thead><tr><th>Order No.</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead><tbody id="orderRows"></tbody></table></div>
+</section>
+
+<!-- PROMOTIONS -->
+<section id="promotionsPage" class="panel hidden">
+<h2>Promotions / အထူးလျှော့ဈေး</h2>
+<label>Promotion Name</label><input id="promoName">
+<label>Type</label>
+<select id="promoType">
+<option value="percentage">Percentage</option>
+<option value="fixed_amount">Fixed Amount</option>
+<option value="buy_x_get_y">Buy X Get Y</option>
+<option value="quantity_discount">Quantity Discount</option>
+</select>
+<div class="row">
+<div><label>Minimum Amount</label><input id="promoMinimum" type="number" value="0"></div>
+<div><label>Discount Value</label><input id="promoDiscount" type="number" value="0"></div>
+</div>
+<button id="savePromo">Save Promotion</button>
+<div id="promoRows"></div>
+</section>
+
+<!-- SETTINGS -->
 <section id="settingsPage" class="panel hidden">
 <h2>Settings / ဆက်တင်</h2>
-<div class="row"><div><label>Language / ဘာသာစကား</label><select id="settingsLanguage"><option value="my">မြန်မာ</option><option value="en">English</option></select></div><div><label>Active Shop / လက်ရှိဆိုင်</label><input id="settingsShopName" readonly></div></div>
-<p class="muted">ဆိုင်အချက်အလက်၊ ငွေကြေး၊ ပြေစာပုံစံ၊ ဝန်ထမ်းခွင့်ပြုချက်နှင့် POS ရွေးချယ်စရာများကို နောက်အဆင့်တွင် ဒီနေရာကနေ စီမံနိုင်အောင် ထည့်သွင်းမယ်။</p>
+<p>Shop: <b id="settingsShop"></b></p>
+<p>Role: <b id="settingsRole"></b></p>
+<p>Email: <b id="settingsEmail"></b></p>
+<p class="muted">မြန်မာ / English နှစ်ဘာသာ အသုံးပြုနိုင်ပါတယ်။</p>
 </section>
 
-<section id="backofficePage" class="panel hidden">
-<h2>Back office / စီမံခန့်ခွဲမှု</h2>
-<p>ဆိုင်၏ အရောင်းအခြေအနေ၊ ပစ္စည်းစာရင်းနှင့် အစီရင်ခံစာများကို စီမံခန့်ခွဲရန်။</p>
-<div class="statgrid"><div class="stat">Today's Sales<b id="backofficeSales">0.00</b></div><div class="stat">Items<b id="backofficeItems">0</b></div><div class="stat">Low Stock<b id="backofficeLowStock">0</b></div></div>
-<button data-page="reports" class="secondary">Open Reports / စာရင်းကြည့်ရန်</button>
-</section>
-
-<section id="appsPage" class="panel hidden">
-<h2>Apps / အက်ပ်များ</h2>
-<p>HM Shop 777 အတွက် ထပ်တိုးဝန်ဆောင်မှုများကို ဒီနေရာမှာ စုစည်းပေးမယ်။</p>
-<div class="product"><strong>Available modules / ရရှိနိုင်သောလုပ်ဆောင်ချက်များ</strong><p>Sales, Items, Receipts, Reports</p><p class="muted">အခြား App ချိတ်ဆက်မှုများကို နောက်အဆင့်တွင် ထည့်သွင်းမယ်။</p></div>
-</section>
-
-<section id="supportPage" class="panel hidden">
-<h2>Support / အကူအညီ</h2>
-<p>HM Shop 777 POS အသုံးပြုရာတွင် အခက်အခဲရှိပါက အောက်ပါအချက်အလက်များကို ပေးပို့ပါ။</p>
-<label>Problem / ပြဿနာ</label><textarea id="supportMessage" placeholder="ပြဿနာကို ရေးပါ..."></textarea>
-<p class="muted">Support ticket သိမ်းဆည်းစနစ်ကို database ချိတ်ဆက်ပြီးမှ အသုံးပြုနိုင်ပါမယ်။</p>
-</section>
 </div>
 </div>
 </section>
 </main>
 
 <script>
-const SUPABASE_URL = "https://clihgidrcvizyxlknshy.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_iH2ZBs9VRq9gAHQ75X8gMQ_DOB6DDfZ";
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+"use strict";
 
-let currentUser=null, currentShop=null, currentRole="", shops=[], products=[];
-const $ = id => document.getElementById(id);
-function say(message,ok=true){$("status").textContent=message;$("status").className="status "+(ok?"good":"bad");}
-function money(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-const pageNames=["dashboard","pos","receipts","shift","products","settings","backoffice","apps","support","reports"];
-function showPage(name){pageNames.forEach(p=>{const el=$(p+"Page");if(el)el.classList.toggle("hidden",p!==name);});document.querySelectorAll(".side-nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));if(name==="receipts")loadReceipts();if(name==="settings")syncSettings();if(name==="dashboard"&&currentShop){loadDashboard();loadProducts();}}
-document.querySelectorAll(".side-nav button[data-page], [data-page=reports]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-$("language").value=localStorage.getItem("hm_language")||"my";
-$("language").addEventListener("change",()=>{localStorage.setItem("hm_language",$("language").value);$("settingsLanguage").value=$("language").value;});
-$("settingsLanguage").addEventListener("change",()=>{$("language").value=$("settingsLanguage").value;localStorage.setItem("hm_language",$("language").value);});
-function syncSettings(){if(currentShop){$("settingsShopName").value=currentShop.name||"";}$("settingsLanguage").value=$("language").value;}
+/* SUPABASE CONFIG */
+const SUPABASE_URL="https://clihgidrcvizyxlknshy.supabase.co";
+const SUPABASE_KEY="sb_publishable_iH2ZBs9VRq9gAHQ75X8gMQ_DOB6DDfZ";
 
+const $=id=>document.getElementById(id);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let currentUser=null,currentShop=null,currentRole="";
+let shops=[],products=[],customers=[],suppliers=[],sales=[];
+let selectedImage=null,busy=false;
+
+function say(msg,ok=false){
+ $("status").textContent=msg;
+ $("status").className="status "+(ok?"good":"bad");
+}
+function money(n){
+ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function esc(s){
+ return String(s??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
+}
+function canManage(){
+ return ["owner","manager","platform_admin"].includes(currentRole);
+}
+function requireManager(){
+ if(!canManage()){say("Owner / Manager ခွင့်ပြုချက်လိုအပ်ပါတယ်။");return false;}
+ return true;
+}
+function setBusy(value){
+ busy=value;
+ document.querySelectorAll("button").forEach(b=>b.disabled=value);
+}
+async function safe(fn){
+ if(busy)return;
+ setBusy(true);
+ try{await fn();}
+ catch(e){console.error(e);say(e.message||String(e));}
+ finally{setBusy(false);}
+}
+
+/* AUTH */
 async function login(){
- const email=$("email").value.trim(),password=$("password").value;
- if(!email||!password)return say("Email နဲ့ Password ဖြည့်ပါ။",false);
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ if(!email||!password)return say("Email နှင့် Password ဖြည့်ပါ။");
+ say("Logging in... Please wait.",true);
  const {data,error}=await db.auth.signInWithPassword({email,password});
- if(error)return say(error.message,false);
- currentUser=data.user; await loadMemberships();
+ if(error)return say("Login failed: "+error.message);
+ currentUser=data.user;
+ await loadMemberships();
 }
 async function signup(){
- const email=$("email").value.trim(),password=$("password").value;
- if(!email||password.length<6)return say("Email ဖြည့်ပြီး Password အနည်းဆုံး ၆ လုံးထားပါ။",false);
- const {error}=await db.auth.signUp({email,password});
- if(error)return say(error.message,false);
- say("Account created. Email confirmation လိုအပ်နိုင်ပါတယ်။");
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ if(!email||password.length<6)
+ return say("Email ဖြည့်ပြီး Password အနည်းဆုံး ၆ လုံးထားပါ။");
+ const {data,error}=await db.auth.signUp({email,password});
+ if(error)return say("Signup failed: "+error.message);
+ if(data.session){
+ currentUser=data.user;
+ await loadMemberships();
+ }else{
+ say("Account ဖွင့်ပြီးပါပြီ။ Email Confirmation လိုအပ်နိုင်ပါတယ်။",true);
+ }
 }
 async function logout(){
- const {error}=await db.auth.signOut();if(error)return say("Logout failed: "+error.message,false);
- currentUser=null;currentShop=null;currentRole="";shops=[];products=[];
- $("appPanel").classList.add("hidden");$("authPanel").classList.remove("hidden");$("who").textContent="";say("Logged out.");
+ const {error}=await db.auth.signOut();
+ if(error)return say(error.message);
+ currentUser=null;currentShop=null;shops=[];products=[];sales=[];
+ $("appPanel").classList.add("hidden");
+ $("authPanel").classList.remove("hidden");
+ $("who").textContent="Not logged in";
+ say("Logged out.",true);
 }
-$("loginBtn").onclick=login;$("signupBtn").onclick=signup;$("logoutBtn").onclick=logout;
+$("loginBtn").onclick=()=>safe(login);
+$("signupBtn").onclick=()=>safe(signup);
+$("logoutBtn").onclick=()=>safe(logout);
 
+/* SESSION */
+db.auth.onAuthStateChange((event,session)=>{
+ if(event==="SIGNED_OUT"){
+ currentUser=null;
+ }
+});
+async function restoreSession(){
+ const {data,error}=await db.auth.getSession();
+ if(error)return say(error.message);
+ if(data.session){
+ currentUser=data.session.user;
+ await loadMemberships();
+ }
+}
+
+/* MEMBERSHIPS AND SHOPS */
 async function loadMemberships(){
- const {data:authData}=await db.auth.getUser();currentUser=authData.user;
- if(!currentUser)return;
- const [{data:membership,error:memErr},{data:isAdmin,error:adminErr}]=await Promise.all([
-  db.from("shop_memberships").select("shop_id,role,is_active").eq("user_id",currentUser.id).eq("is_active",true),
-  db.rpc("is_platform_admin")
+ const {data:auth,error:authError}=await db.auth.getUser();
+ if(authError)throw authError;
+ currentUser=auth.user;
+ if(!currentUser)return say("Login session မတွေ့ပါ။");
+
+ const [m,a]=await Promise.all([
+ db.from("shop_memberships")
+ .select("shop_id,role,is_active")
+ .eq("user_id",currentUser.id).eq("is_active",true),
+ db.rpc("is_platform_admin")
  ]);
- if(memErr)return say("Shop membership error: "+memErr.message,false);
- // Fail closed: if the admin check fails, do not treat the user as a platform admin.
- if(adminErr)return say("Admin permission check failed: "+adminErr.message+". Please try again.",false);
- const activeMemberships=membership||[];
- const ids=activeMemberships.map(x=>x.shop_id);
- let query=db.from("shops").select("id,name,currency_code,currency_symbol,is_active").eq("is_active",true);
- if(isAdmin!==true)query=query.in("id",ids.length?ids:["00000000-0000-0000-0000-000000000000"]);
- const {data:shopData,error}=await query.order("name");
- if(error)return say(error.message,false);
- shops=shopData||[];
- if(!shops.length)return say("ဒီအကောင့်အတွက် အသုံးပြုခွင့်ရှိသော Shop မတွေ့ပါ။",false);
- $("authPanel").classList.add("hidden");$("appPanel").classList.remove("hidden");
+ if(m.error)throw new Error("Membership: "+m.error.message);
+ if(a.error)throw new Error("Admin check: "+a.error.message);
+
+ const memberships=m.data||[];
+ const isAdmin=a.data===true;
+ const ids=memberships.map(x=>x.shop_id);
+
+ let q=db.from("shops")
+ .select("id,name,currency_code,currency_symbol,timezone,is_active")
+ .eq("is_active",true);
+ if(!isAdmin)q=q.in("id",ids.length?ids:["00000000-0000-0000-0000-000000000000"]);
+
+ const {data,error}=await q.order("name");
+ if(error)throw error;
+ shops=data||[];
+ if(!shops.length){
+ $("who").textContent=currentUser.email;
+ return say("Login အောင်မြင်ပါတယ်။ ဒါပေမဲ့ အသုံးပြုခွင့်ရှိတဲ့ Shop မတွေ့ပါ။");
+ }
+
+ $("authPanel").classList.add("hidden");
+ $("appPanel").classList.remove("hidden");
  $("who").textContent=currentUser.email||"Signed in";
- $("shopSelect").innerHTML=shops.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
- currentShop=shops[0];$("shopSelect").value=currentShop.id;
- await loadShop();
+ $("shopSelect").innerHTML=shops.map(s=>
+ `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+
+ await loadShop(shops[0].id);
 }
-$("shopSelect").addEventListener("change",async()=>{currentShop=shops.find(s=>s.id===$("shopSelect").value);await loadShop();});
-async function loadShop(){
+$("shopSelect").addEventListener("change",()=>safe(async()=>{
+ await loadShop($("shopSelect").value);
+}));
+
+async function loadShop(id){
+ currentShop=shops.find(s=>s.id===id);
  if(!currentShop)return;
- const {data:membership,error}=await db.from("shop_memberships").select("role").eq("user_id",currentUser.id).eq("shop_id",currentShop.id).eq("is_active",true).maybeSingle();
- if(error){say("Shop role check failed: "+error.message,false);return;}
- const {data:isAdmin,error:adminError}=await db.rpc("is_platform_admin");
- if(adminError){say("Admin permission check failed: "+adminError.message,false);return;}
- currentRole=isAdmin===true?"platform_admin":(membership?.role||"");
- await Promise.all([loadProducts(),loadDashboard(),loadReports()]);
- syncSettings();showPage("dashboard");say("Shop loaded: "+currentShop.name);
+
+ const [m,a]=await Promise.all([
+ db.from("shop_memberships").select("role")
+ .eq("user_id",currentUser.id).eq("shop_id",id)
+ .eq("is_active",true).maybeSingle(),
+ db.rpc("is_platform_admin")
+ ]);
+ if(m.error)throw m.error;
+ if(a.error)throw a.error;
+ currentRole=a.data===true?"platform_admin":(m.data?.role||"");
+
+ $("settingsShop").textContent=currentShop.name;
+ $("settingsRole").textContent=currentRole||"No role";
+ $("settingsEmail").textContent=currentUser.email||"";
+
+ await Promise.all([
+ loadProducts(),loadCustomers(),loadSuppliers(),
+ loadSales(),loadOrders(),loadPromotions()
+ ]);
+ await loadDashboard();
+ showPage("dashboard");
+ say("Shop loaded: "+currentShop.name,true);
 }
-function canManage(){return ["owner","manager","platform_admin"].includes(currentRole);}
+
+/* NAVIGATION */
+const pages=["dashboard","pos","products","stock","customers",
+"suppliers","purchases","receipts","reports","orders","promotions","settings"];
+
+function showPage(name){
+ pages.forEach(p=>$(p+"Page").classList.toggle("hidden",p!==name));
+ document.querySelectorAll("nav button").forEach(b=>
+ b.classList.toggle("active",b.dataset.page===name));
+ if(name==="reports")renderReports();
+ if(name==="receipts")renderReceipts();
+}
+document.querySelectorAll("nav button").forEach(b=>{
+ b.onclick=()=>showPage(b.dataset.page);
+});
+
+/* LANGUAGE */
+$("language").value=localStorage.getItem("hm_language")||"my";
+$("language").onchange=()=>localStorage.setItem("hm_language",$("language").value);
+
+/* PRODUCTS */
 async function loadProducts(){
- const {data,error}=await db.from("products").select("*").eq("shop_id",currentShop.id).eq("is_active",true).order("product_name");
- if(error)return say("Products: "+error.message,false);
+ if(!currentShop)return;
+ const {data,error}=await db.from("products")
+ .select("*").eq("shop_id",currentShop.id)
+ .eq("is_active",true).order("product_name");
+ if(error)throw error;
  products=data||[];
+ renderProducts();
+}
+function renderProducts(){
+ const options=products.map(p=>
+ `<option value="${p.id}">${esc(p.product_name)} — ${money(p.selling_price)}</option>`).join("");
+ ["saleProduct","stockProduct","purchaseProduct"].forEach(id=>$(id).innerHTML=options);
+ $("productRows").innerHTML=products.map(p=>`
+ <tr>
+ <td>${p.image_url?`<img src="${esc(p.image_url)}" width="48" height="48">`:"-"}</td>
+ <td>${esc(p.product_name)}</td>
+ <td>${money(p.selling_price)}</td>
+ <td>${money(p.stock_quantity)}</td>
+ <td><button class="secondary editProduct" data-id="${p.id}">Edit</button>
+ <button class="danger deleteProduct" data-id="${p.id}">Delete</button></td>
+ </tr>`).join("");
  $("productCount").textContent=products.length;
- $("lowStockCount").textContent=products.filter(p=>Number(p.stock_quantity||0)<=Number(p.low_stock_level||5)).length;
- $("saleProduct").innerHTML=products.map(p=>`<option value="${p.id}">${esc(p.product_name)} — ${money(p.selling_price)} (Stock ${p.stock_quantity||0})</option>`).join("");
- $("productList").innerHTML=products.map(p=>`<article class="product">
- ${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.product_name)}">`:'<div style="height:145px;background:#edf1f6;border-radius:8px;display:grid;place-items:center;color:#667085">No Photo</div>'}
- <strong>${esc(p.product_name)}</strong><div>Price: ${money(p.selling_price)} ${esc(currentShop.currency_code||"")}</div>
- <div>Stock: ${esc(p.stock_quantity??0)}</div><div class="muted">${esc(p.category||"")}</div>
- </article>`).join("")||"<p>No products yet.</p>";
+ $("lowStock").textContent=products.filter(p=>
+ Number(p.stock_quantity)<=Number(p.low_stock_level)).length;
  updateSaleInfo();
 }
-$("saleProduct").addEventListener("change",updateSaleInfo);
-function updateSaleInfo(){const p=products.find(x=>x.id===$("saleProduct").value);$("saleInfo").textContent=p?`Price: ${money(p.selling_price)} | Available: ${p.stock_quantity||0}`:"";}
-let selectedProductImage=null;
-function handleProductImage(inputId){
- const file=$(inputId).files[0];if(!file)return;
- if(!file.type.startsWith("image/")){say("Image file only ရွေးပါ။ ဓာတ်ပုံဖိုင်သာ ရွေးပါ။",false);$(inputId).value="";return;}
- if(file.size>5*1024*1024){say("ဓာတ်ပုံ 5MB ထက်မကြီးရပါ။ 5MB အောက်ပုံရွေးပါ။",false);$(inputId).value="";return;}
- selectedProductImage=file;
- const oldUrl=$("imagePreview").dataset.objectUrl;if(oldUrl)URL.revokeObjectURL(oldUrl);
- const url=URL.createObjectURL(file);$("imagePreview").dataset.objectUrl=url;$("imagePreview").src=url;$("imagePreview").classList.remove("hidden");
- // A single chosen image is used regardless of whether it came from camera or gallery.
- $(inputId==="pCamera"?"pImage":"pCamera").value="";
+$("saleProduct").onchange=updateSaleInfo;
+$("saleQty").oninput=updateSaleInfo;
+function updateSaleInfo(){
+ const p=products.find(x=>x.id===$("saleProduct").value);
+ if(!p){$("saleInfo").textContent="";$("saleTotal").textContent="0.00";return;}
+ const qty=Number($("saleQty").value)||0;
+ $("saleInfo").textContent="Stock: "+p.stock_quantity+" | Price: "+money(p.selling_price);
+ $("saleTotal").textContent=money(p.selling_price*qty);
 }
-$("pImage").addEventListener("change",()=>handleProductImage("pImage"));
-$("pCamera").addEventListener("change",()=>handleProductImage("pCamera"));
-async function uploadProductImage(file){
- const ext=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
- const path=`${currentShop.id}/${crypto.randomUUID()}.${ext}`;
- const {error}=await db.storage.from("product-images").upload(path,file,{upsert:false,contentType:file.type});
+
+async function uploadImage(file){
+ if(!file)return null;
+ if(!file.type.startsWith("image/"))throw new Error("Image only");
+ if(file.size>5*1024*1024)throw new Error("Image must be under 5MB");
+ const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"")||"jpg";
+ const path=currentShop.id+"/"+crypto.randomUUID()+"."+ext;
+ const {error}=await db.storage.from("product-images")
+ .upload(path,file,{contentType:file.type,upsert:false});
  if(error)throw error;
- const {data}=db.storage.from("product-images").getPublicUrl(path);
- return data.publicUrl;
+ return db.storage.from("product-images").getPublicUrl(path).data.publicUrl;
 }
-async function addProduct(){
- if(!currentUser||!currentShop)return say("အရင်ဆုံး Login ဝင်ပြီး Shop ရွေးပါ။",false);
- if(!canManage())return say("Product အသစ်ထည့်ရန် Owner/Manager ခွင့်ပြုချက်လိုပါတယ်။",false);
- const name=$("pName").value.trim(),price=Number($("pPrice").value),cost=Number($("pCost").value),stock=Number($("pStock").value),low=Number($("pLow").value);
- if(!name||!Number.isFinite(price)||price<0||cost<0||stock<0||low<0)return say("ပစ္စည်းအချက်အလက် မှန်ကန်စွာဖြည့်ပါ။",false);
- try{
-  let image_url=null;const file=selectedProductImage;if(file)image_url=await uploadProductImage(file);
-  const {error}=await db.from("products").insert({shop_id:currentShop.id,product_name:name,barcode:$("pBarcode").value.trim()||null,category:$("pCategory").value.trim()||null,cost_price:cost,selling_price:price,stock_quantity:stock,low_stock_level:low,currency_code:currentShop.currency_code||null,image_url});
-  if(error)throw error;
-  ["pName","pBarco
+function chooseImage(input){
+ const f=input.files?.[0];
+ if(!f)return;
+ selectedImage=f;
+ $("preview").src=URL.createObjectURL(f);
+ $("preview").classList.remove("hidden");
+}
+$("pCamera").onchange=()=>chooseImage($("pCamera"));
+$("pImage").onchange=()=>chooseImage($("pImage"));
+
+$("saveProduct").onclick=()=>safe(async()=>{
+ if(!requireManager())return;
+ const name=$("pName").value.trim();
+ const cost=Number($("pCost").value),price=Number($("pPrice").value);
+ const stock=Number($("pStock").value),low=Number($("pLow").value);
+ if(!name||[cost,price,stock,low].some(n=>!Number.isFinite(n)||n<0))
+ throw new Error("Product information မှန်ကန်စွာ ဖြည့်ပါ။");
+ let image_url=await uploadImage(selectedImage);
+ const {error}=await db.from("products").insert({
+ shop_id:currentShop.id,product_name:
